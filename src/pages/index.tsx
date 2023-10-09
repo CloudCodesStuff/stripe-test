@@ -48,18 +48,18 @@ import { useRouter } from 'next/router';
 // ];
 
 type Item = {
-    id: string,
-    image: string,
-    createdAt: Date,
-    updatedAt: Date,
-    link: string,
-    company: string,
-    title: string,
-    location: string,
-    compensation: string,
-    description: string,
-    clicks: number,
-    tags: string[],
+    id?: string; // Make id optional
+    updatedAt?: Date; // Make updatedAt optional
+    clicksts?: number; // Make clicksts optional
+    link: string;
+    company: string;
+    title: string;
+    image: string;
+    location: string;
+    compensation: string;
+    description: string;
+    tags: string[];
+    createdAt: Date;
 };
 
 
@@ -70,16 +70,17 @@ export default function Home() {
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [filteredItems, setFilteredItems] = useState<Item[]>([]);
 
-    const uniqueTags = [...new Set<string>(items?.flatMap(item => item.tags))]; // Get unique tags
+    const uniqueTags = [...new Set<string>(items?.flatMap((item: { tags: any; }) => item.tags))]; // Get unique tags
 
     const handleSearch = (query: string) => {
-        const filtered = items?.filter((item) =>
+        const filtered = items?.filter((item: { title: string; description: string; tags: string | string[]; }) =>
             item.title.toLowerCase().includes(query.toLowerCase()) ||
             item.description.toLowerCase().includes(query.toLowerCase()) ||
             selectedTags.every(tag => item.tags?.includes(tag))
-        );
+        ) || []; // Provide an empty array as the default value if no items match the filter criteria.
         setFilteredItems(filtered);
     };
+
 
     const handleTagFilter = (tag: string) => {
         if (selectedTags.includes(tag)) {
@@ -95,9 +96,10 @@ export default function Home() {
         // Filter items when selectedTags change
         const filtered = items?.filter((item) =>
             selectedTags.length === 0 || selectedTags.every(tag => item.tags.includes(tag))
-        );
+        ) || [];
         setFilteredItems(filtered);
     }, [selectedTags]);
+
 
 
     return (
