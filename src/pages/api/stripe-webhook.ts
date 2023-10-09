@@ -31,7 +31,7 @@ export default async function handler(
 
     try {
       event = stripe.webhooks.constructEvent(buf, sig as string, webhookSecret);
-
+      console.log("api testing" + event);
       // Handle the event
       switch (event.type) {
         case "invoice.paid":
