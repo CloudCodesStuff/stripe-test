@@ -7,8 +7,9 @@ import {
 } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
 
+import GithubProvider from "next-auth/providers/github";
 import { env } from "@/env.mjs";
-import { db } from "@/server/db";
+import { prisma } from "@/server/db";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -18,17 +19,17 @@ import { db } from "@/server/db";
  */
 declare module "next-auth" {
   interface Session extends DefaultSession {
-    user: DefaultSession["user"] & {
-      id: string;
-      // ...other properties
-      // role: UserRole;
-    };
+    user: User;
   }
 
-  // interface User {
-  //   // ...other properties
-  //   // role: UserRole;
-  // }
+  interface User {
+    id: string;
+    image: string | null | undefined;
+    name: string;
+    username: string;
+    email: string;
+    stripeSubscriptionStatus: string | null;
+  }
 }
 
 /**
@@ -38,19 +39,32 @@ declare module "next-auth" {
  */
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    session: async ({ session, user }) => {
+      return {
+        ...session,
+        user: {
+          id: user.id,
+          image: user.image,
+          name: user.name,
+          username: user.name,
+          email: user.email,
+          stripeSubscriptionStatus: user.stripeSubscriptionStatus,
+        },
+      };
+    },
   },
-  adapter: PrismaAdapter(db),
+  pages: {
+    signIn: "/login",
+  },
+  adapter: PrismaAdapter(prisma),
   providers: [
     DiscordProvider({
       clientId: env.DISCORD_CLIENT_ID,
       clientSecret: env.DISCORD_CLIENT_SECRET,
+    }),
+    GithubProvider({
+      clientId: env.GITHUB_CLIENT_ID,
+      clientSecret: env.GITHUB_CLIENT_SECRET,
     }),
     /**
      * ...add more providers here.
